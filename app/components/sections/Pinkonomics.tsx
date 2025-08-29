@@ -272,7 +272,7 @@ const Pinkonomics = forwardRef<HTMLDivElement>((props, ref) => {
                         animate={{ scale: [1, 1.02, 1] }}
                         transition={{ duration: 3, repeat: Infinity }}
                       >
-                        90.0M
+                        {`${(burnedAmount / 1000000).toFixed(1)}M`}
                       </motion.div>
                       <div className="absolute top-1 right-0 flex flex-col items-end">
                         <div className="text-xs text-gray-400">PINK tokens</div>
@@ -329,7 +329,7 @@ const Pinkonomics = forwardRef<HTMLDivElement>((props, ref) => {
                         animate={{ scale: [1, 1.02, 1] }}
                         transition={{ duration: 3, repeat: Infinity, delay: 1 }}
                       >
-                        2.5M
+                        {isLoading ? "..." : stats?.burn?.burnedLast30Days ? `${(stats.burn.burnedLast30Days / 1_000_000).toFixed(2)}M` : "?"}
                       </motion.div>
                       <div className="absolute top-1 right-0">
                         <div className="text-xs text-gray-400">PINK tokens per month</div>
@@ -615,10 +615,14 @@ const Pinkonomics = forwardRef<HTMLDivElement>((props, ref) => {
             </div>
 
             <div className="bg-black/30 rounded-lg p-4 mt-2">
-              <div className="text-3xl font-bold text-white">666.4M</div>
+              <div className="text-3xl font-bold text-white">
+                {(stats?.balances?.treasuryBalance ? (stats.balances.treasuryBalance / 1_000_000).toFixed(1) + "M" : "?")}
+              </div>
               <div className="flex items-center justify-between">
                 <div className="text-yellow-400 text-sm">PINK tokens</div>
-                <div className="text-xs px-2 py-0.5 rounded-full bg-yellow-900/40 text-yellow-300">29% of total</div>
+                <div className="text-xs px-2 py-0.5 rounded-full bg-yellow-900/40 text-yellow-300">
+                  {isLoading ? "..." : stats?.balances?.treasuryBalance && stats?.balances?.maxSupply ? `${((stats.balances.treasuryBalance / stats.balances.maxSupply) * 100).toFixed(1)}% of total` : "?"}
+                </div>
               </div>
             </div>
 
@@ -711,8 +715,8 @@ const Pinkonomics = forwardRef<HTMLDivElement>((props, ref) => {
                       <div className="w-3 h-3 rounded-full bg-pink-500 mr-2"></div>
                       <h3 className="text-white font-medium">Initial Supply</h3>
                     </div>
-                    <p className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-pink-200">2.3B</p>
-                    <p className="text-xs text-gray-400">2,300,001,221 PINK</p>
+                    <p className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-pink-200">{isLoading ? "..." : stats?.balances?.maxSupply ? (stats.balances.maxSupply / 1_000_000_000).toFixed(1) + "B" : "?"}</p>
+                    <p className="text-xs text-gray-400">{isLoading ? "..." : stats?.balances?.maxSupply?.toLocaleString() || "?"} PINK</p>
                   </motion.div>
 
                   <motion.div
@@ -726,8 +730,8 @@ const Pinkonomics = forwardRef<HTMLDivElement>((props, ref) => {
                       <div className="w-3 h-3 rounded-full bg-purple-500 mr-2"></div>
                       <h3 className="text-white font-medium">Current Supply</h3>
                     </div>
-                    <p className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-purple-200">2.21B</p>
-                    <p className="text-xs text-gray-400">2,209,975,342 PINK</p>
+                    <p className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-purple-200">{isLoading ? "..." : stats?.balances?.totalSupply ? (stats.balances.totalSupply / 1_000_000_000).toFixed(2) + "B" : "?"}</p>
+                    <p className="text-xs text-gray-400">{isLoading ? "..." : stats?.balances?.totalSupply?.toLocaleString() || "?"} PINK</p>
                   </motion.div>
                 </div>
 
