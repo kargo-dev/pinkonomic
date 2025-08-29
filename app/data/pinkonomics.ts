@@ -151,24 +151,31 @@ export interface PinkStatsResponse {
     balances: {
         maxSupply: number;
         totalSupply: number;
+        totalSupplyPercentage: number;
         circulatingSupply: number;
+        circulatingSupplyPercentage: number;
         moonbeamSupply: number;
         baseSupply: number;
         treasuryBalance: number;
+        treasuryBalancePercentage: number;
         moonbeamBurnBalance: number;
+        moonbeamBurnBalancePercentage: number;
         baseBurnBalance: number;
+        baseBurnBalancePercentage: number;
         phalaBurnBalance: number;
+        phalaBurnBalancePercentage: number;
         totalBurnBalance: number;
+        totalBurnBalancePercentage: number;
         lastUpdated: string;
     };
-    burn: {
+    pinkDropBurn: {
         burnedLast1Day: number;
         burnedLast7Days: number;
         burnedLast30Days: number;
         burnedLast60Days: number;
         updatedAt: string;
     };
-    pinkDrop: {
+    pinkDropGameStats: {
         pinkSpentOnTickets: number;
         ticketsPurchased: number;
         rewardsClaimed: number;
