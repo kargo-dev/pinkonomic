@@ -118,43 +118,38 @@ const Pinkonomics = forwardRef<HTMLDivElement>((props, ref) => {
 
   // Process data when stats are updated
   useEffect(() => {
-    if (!stats || !stats.balances || !stats.burn) return;
+    if (!stats || !stats.balances || !stats.pinkDropBurn) return;
 
     try {
-      // Update total burn amount and percentage
       setBurnedAmount(stats.balances.totalBurnBalance || 0);
-      setBurnPercentage((((stats.balances.totalBurnBalance || 0) / (stats.balances.maxSupply || TOTAL_SUPPLY)) * 100).toFixed(2));
+      setBurnPercentage(stats.balances.totalBurnBalancePercentage?.toFixed(2) || "0");
       setLastUpdated(stats.lastUpdated ? new Date(stats.lastUpdated).toLocaleString() : new Date().toLocaleString());
 
-      // Update chain-specific burn data
       setChainBurns({
         moonbeam: stats.balances.moonbeamBurnBalance || 0,
         base: stats.balances.baseBurnBalance || 0,
         phala: stats.balances.phalaBurnBalance || 0
       });
 
-      // Update burn rates
       setBurnRates({
-        last1Day: stats.burn.burnedLast1Day || 0,
-        last7Days: stats.burn.burnedLast7Days || 0,
-        last30Days: stats.burn.burnedLast30Days || 0,
-        last60Days: stats.burn.burnedLast60Days || 0,
-        monthlyAverage: stats.burn.burnedLast30Days || 0
+        last1Day: stats.pinkDropBurn?.burnedLast1Day || 0,
+        last7Days: stats.pinkDropBurn?.burnedLast7Days || 0,
+        last30Days: stats.pinkDropBurn?.burnedLast30Days || 0,
+        last60Days: stats.pinkDropBurn?.burnedLast60Days || 0,
+        monthlyAverage: stats.pinkDropBurn?.burnedLast30Days || 0
       });
 
-      // Update token metrics with the new data
       setTokenMetrics({
-        circulatingSupply: stats.balances.circulatingSupply || (TOTAL_SUPPLY * 0.36),
-        percentCirculating: ((stats.balances.circulatingSupply || (TOTAL_SUPPLY * 0.36)) / (stats.balances.maxSupply || TOTAL_SUPPLY)) * 100,
-        burned: stats.balances.totalBurnBalance || 0,
-        percentBurned: ((stats.balances.totalBurnBalance || 0) / (stats.balances.maxSupply || TOTAL_SUPPLY)) * 100,
-        treasuryHoldings: stats.balances.treasuryBalance || tokenMetricsConstants.treasuryAllocation,
-        percentTreasury: ((stats.balances.treasuryBalance || tokenMetricsConstants.treasuryAllocation) / (stats.balances.maxSupply || TOTAL_SUPPLY)) * 100,
+        circulatingSupply: stats.balances.circulatingSupply,
+        percentCirculating: stats.balances.circulatingSupplyPercentage,
+        burned: stats.balances.totalBurnBalance,
+        percentBurned: stats.balances.totalBurnBalancePercentage,
+        treasuryHoldings: stats.balances.treasuryBalance,
+        percentTreasury: stats.balances.treasuryBalancePercentage,
         teamAllocation: tokenMetricsConstants.teamAllocation,
         percentTeam: tokenMetricsConstants.percentTeam
       });
 
-      // Update market data
       setMarketData({
         marketCap: stats.marketData?.marketCap || '0',
         price: stats.marketData?.price || '0',
@@ -272,7 +267,7 @@ const Pinkonomics = forwardRef<HTMLDivElement>((props, ref) => {
                         animate={{ scale: [1, 1.02, 1] }}
                         transition={{ duration: 3, repeat: Infinity }}
                       >
-                        {`${(burnedAmount / 1000000).toFixed(1)}M`}
+                        {`${(burnedAmount / 1_000_000).toFixed(1)}M`}
                       </motion.div>
                       <div className="absolute top-1 right-0 flex flex-col items-end">
                         <div className="text-xs text-gray-400">PINK tokens</div>
@@ -329,7 +324,7 @@ const Pinkonomics = forwardRef<HTMLDivElement>((props, ref) => {
                         animate={{ scale: [1, 1.02, 1] }}
                         transition={{ duration: 3, repeat: Infinity, delay: 1 }}
                       >
-                        {isLoading ? "..." : stats?.burn?.burnedLast30Days ? `${(stats.burn.burnedLast30Days / 1_000_000).toFixed(2)}M` : "?"}
+                        {displayValue(isLoading, stats?.pinkDropBurn?.burnedLast30Days, v => (v / 1_000_000).toFixed(2), "M")}
                       </motion.div>
                       <div className="absolute top-1 right-0">
                         <div className="text-xs text-gray-400">PINK tokens per month</div>
@@ -424,7 +419,7 @@ const Pinkonomics = forwardRef<HTMLDivElement>((props, ref) => {
                               <div className="text-xs text-gray-400">Moonbeam</div>
                             </div>
                             <div className="text-lg font-bold text-white mt-0.5">{(chainBurns.moonbeam / 1000000).toFixed(1)}M</div>
-                            <div className="text-xs text-pink-400">{((chainBurns.moonbeam / burnedAmount) * 100).toFixed(1)}% of total</div>
+                            <div className="text-xs text-pink-400">{displayPercent(isLoading, chainBurns.moonbeam, burnedAmount)}</div>
                           </div>
 
                           <div>
@@ -433,7 +428,7 @@ const Pinkonomics = forwardRef<HTMLDivElement>((props, ref) => {
                               <div className="text-xs text-gray-400">Base</div>
                             </div>
                             <div className="text-lg font-bold text-white mt-0.5">{(chainBurns.base / 1000000).toFixed(1)}M</div>
-                            <div className="text-xs text-blue-400">{((chainBurns.base / burnedAmount) * 100).toFixed(1)}% of total</div>
+                            <div className="text-xs text-blue-400">{displayPercent(isLoading, chainBurns.base, burnedAmount)}</div>
                           </div>
                         </div>
 
@@ -443,7 +438,7 @@ const Pinkonomics = forwardRef<HTMLDivElement>((props, ref) => {
                             <div className="text-xs text-gray-400">Phala</div>
                           </div>
                           <div className="text-lg font-bold text-white">{(chainBurns.phala / 1000000).toFixed(1)}M</div>
-                          <div className="text-xs text-purple-400">{((chainBurns.phala / burnedAmount) * 100).toFixed(1)}% of total</div>
+                          <div className="text-xs text-purple-400">{displayPercent(isLoading, chainBurns.phala, burnedAmount)}</div>
                         </div>
                       </div>
 
@@ -572,12 +567,12 @@ const Pinkonomics = forwardRef<HTMLDivElement>((props, ref) => {
 
             <div className="bg-black/30 rounded-lg p-4 mt-2">
               <div className="text-3xl font-bold text-white">
-                {isLoading ? "..." : `${(stats?.balances?.circulatingSupply ? (stats.balances.circulatingSupply / 1000000000).toFixed(1) : "1.4")}B`}
+                {displayValue(isLoading, stats?.balances?.circulatingSupply, v => (v / 1_000_000_000).toFixed(1), "B")}
               </div>
               <div className="flex items-center justify-between">
                 <div className="text-purple-400 text-sm">PINK tokens</div>
                 <div className="text-xs px-2 py-0.5 rounded-full bg-purple-900/40 text-purple-300">
-                  {isLoading ? "..." : `${Math.round((stats?.balances?.circulatingSupply || 0) / (stats?.balances?.maxSupply || TOTAL_SUPPLY) * 100)}% of total`}
+                  {isLoading ? "..." : tokenMetrics.percentCirculating !== undefined ? `${tokenMetrics.percentCirculating.toFixed(1)}% of total` : "?"}
                 </div>
               </div>
             </div>
@@ -621,7 +616,7 @@ const Pinkonomics = forwardRef<HTMLDivElement>((props, ref) => {
               <div className="flex items-center justify-between">
                 <div className="text-yellow-400 text-sm">PINK tokens</div>
                 <div className="text-xs px-2 py-0.5 rounded-full bg-yellow-900/40 text-yellow-300">
-                  {isLoading ? "..." : stats?.balances?.treasuryBalance && stats?.balances?.maxSupply ? `${((stats.balances.treasuryBalance / stats.balances.maxSupply) * 100).toFixed(1)}% of total` : "?"}
+                  {isLoading ? "..." : tokenMetrics.percentTreasury !== undefined ? `${tokenMetrics.percentTreasury.toFixed(1)}% of total` : "?"}
                 </div>
               </div>
             </div>
@@ -715,8 +710,8 @@ const Pinkonomics = forwardRef<HTMLDivElement>((props, ref) => {
                       <div className="w-3 h-3 rounded-full bg-pink-500 mr-2"></div>
                       <h3 className="text-white font-medium">Initial Supply</h3>
                     </div>
-                    <p className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-pink-200">{isLoading ? "..." : stats?.balances?.maxSupply ? (stats.balances.maxSupply / 1_000_000_000).toFixed(1) + "B" : "?"}</p>
-                    <p className="text-xs text-gray-400">{isLoading ? "..." : stats?.balances?.maxSupply?.toLocaleString() || "?"} PINK</p>
+                    <p className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-pink-200">{displayValue(isLoading, stats?.balances?.maxSupply, v => (v / 1_000_000_000).toFixed(1), "B")}</p>
+                    <p className="text-xs text-gray-400">{displayValue(isLoading, stats?.balances?.maxSupply?.toLocaleString())} PINK</p>
                   </motion.div>
 
                   <motion.div
@@ -730,8 +725,8 @@ const Pinkonomics = forwardRef<HTMLDivElement>((props, ref) => {
                       <div className="w-3 h-3 rounded-full bg-purple-500 mr-2"></div>
                       <h3 className="text-white font-medium">Current Supply</h3>
                     </div>
-                    <p className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-purple-200">{isLoading ? "..." : stats?.balances?.totalSupply ? (stats.balances.totalSupply / 1_000_000_000).toFixed(2) + "B" : "?"}</p>
-                    <p className="text-xs text-gray-400">{isLoading ? "..." : stats?.balances?.totalSupply?.toLocaleString() || "?"} PINK</p>
+                    <p className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-purple-200">{displayValue(isLoading, stats?.balances?.totalSupply, v => (v / 1_000_000_000).toFixed(2), "B")}</p>
+                    <p className="text-xs text-gray-400">{displayValue(isLoading, stats?.balances?.totalSupply?.toLocaleString())} PINK</p>
                   </motion.div>
                 </div>
 
@@ -776,10 +771,22 @@ const Pinkonomics = forwardRef<HTMLDivElement>((props, ref) => {
                 <div className="mb-4">
                   <div className="bg-black/40 p-3 rounded-lg">
                     <div className="text-sm text-gray-400 mb-1">Treasury Allocation</div>
-                    <div className="text-3xl font-bold text-blue-400">666.4M</div>
+                    <div className="text-3xl font-bold text-blue-400">
+                      {isLoading
+                        ? '...'
+                        : stats?.balances?.treasuryBalance
+                          ? (stats.balances.treasuryBalance / 1_000_000).toFixed(1) + 'M'
+                          : '?'}
+                    </div>
                     <div className="flex items-center justify-between">
                       <div className="text-blue-400 text-sm">PINK tokens</div>
-                      <div className="text-xs px-2 py-0.5 rounded-full bg-blue-900/40 text-blue-300">29% of total</div>
+                      <div className="text-xs px-2 py-0.5 rounded-full bg-blue-900/40 text-blue-300">
+                        {isLoading
+                          ? '...'
+                          : tokenMetrics.percentTreasury !== undefined
+                            ? `${tokenMetrics.percentTreasury.toFixed(1)}% of total`
+                            : '?'}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -837,10 +844,22 @@ const Pinkonomics = forwardRef<HTMLDivElement>((props, ref) => {
 
                 <div className="bg-black/40 p-3 rounded-lg mb-4">
                   <div className="text-sm text-gray-400 mb-1">Supply Reduction</div>
-                  <div className="text-3xl font-bold text-pink-400">90.0M</div>
+                  <div className="text-3xl font-bold text-pink-400">
+                    {isLoading
+                      ? '...'
+                      : tokenMetrics.burned !== undefined
+                        ? (tokenMetrics.burned / 1_000_000).toFixed(1) + 'M'
+                        : '?'}
+                  </div>
                   <div className="flex items-center justify-between">
                     <div className="text-pink-400 text-sm">PINK burned</div>
-                    <div className="text-xs px-2 py-0.5 rounded-full bg-pink-900/40 text-pink-300">3.9% of total</div>
+                    <div className="text-xs px-2 py-0.5 rounded-full bg-pink-900/40 text-pink-300">
+                      {isLoading
+                        ? '...'
+                        : tokenMetrics.percentBurned !== undefined
+                          ? `${tokenMetrics.percentBurned.toFixed(1)}% of total`
+                          : '?'}
+                    </div>
                   </div>
                 </div>
 
@@ -1350,6 +1369,7 @@ const Pinkonomics = forwardRef<HTMLDivElement>((props, ref) => {
           className="mb-20 overflow-hidden"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
+
           viewport={{ once: true }}
           transition={{ duration: 0.7 }}
         >
@@ -1458,3 +1478,17 @@ const Pinkonomics = forwardRef<HTMLDivElement>((props, ref) => {
 Pinkonomics.displayName = "Pinkonomics";
 
 export default Pinkonomics;
+
+// Add at the top, after imports
+function displayValue(isLoading: boolean, value: number | string | undefined, format?: (v: number) => string, suffix = "") {
+  if (isLoading) return "...";
+  if (value === undefined || value === null || value === "") return "?";
+  if (typeof value === "number" && format) return format(value) + suffix;
+  return value + suffix;
+}
+
+function displayPercent(isLoading: boolean, num: number | undefined, denom: number | undefined) {
+  if (isLoading) return "...";
+  if (num === undefined || denom === undefined || denom === 0) return "?";
+  return ((num / denom) * 100).toFixed(1) + "% of total";
+}
