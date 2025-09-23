@@ -7,7 +7,7 @@ const ANIMATION_DURATION = 4000;
 
 const PinkDrop = forwardRef<HTMLDivElement>((props, ref) => {
 
-  const [gameUrl] = useState(`https://pink.frictionlessgaming.com/?v=${Date.now()}`);
+  const [gameUrl] = useState(`https://server.dotispink.com/?v=${Date.now()}`);
   const [isLoading, setIsLoading] = useState(true);
   const [iframeLoaded, setIframeLoaded] = useState(false);
   const [animationComplete, setAnimationComplete] = useState(false);
